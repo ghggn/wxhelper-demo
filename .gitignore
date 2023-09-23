@@ -1,6 +1,6 @@
 .vscode
 .idea
-__pycache__
+**/__pycache__
 injector*
-wxhelper.dll
+*.dll
 *.json

@@ -2,6 +2,7 @@ import json
 import os.path
 from subprocess import check_output
 from typing import Tuple
+import pymem
 
 import psutil
 
@@ -21,21 +22,18 @@ def get_process_id_by_name(process_name):
 
 
 def inject_dll_by_pid(pid: int) -> Tuple[bool, str]:
-    if not os.path.exists("injector.exe") or not os.path.exists("wxhelper.dll"):
-        return False, "未找到必要的文件 inject.exe或wxhelper.dll"
-    res = check_output(["injector.exe", "-p", str(pid), "-i", DLL_NAME]).decode("gbk").strip()
-    if res.find("Successfully") == -1:
-        return False, "注入失败:\n{}".format(res)
-    return True, "注入成功:\n{}".format(res)
-
-
-def eject_dll_by_pid(pid: int) -> Tuple[bool, str]:
-    if not os.path.exists("injector.exe") or not os.path.exists("wxhelper.dll"):
-        return False, "未找到必要的文件 inject.exe或wxhelper.dll"
-    res = check_output(["injector.exe", "-p", str(pid), "-e", DLL_NAME]).decode("gbk").strip()
-    if res.find("Successfully") == -1:
-        return False, "取消注入失败:\n{}".format(res)
-    return True, "取消注入成功:\n{}".format(res)
+    if not os.path.exists("wxhelper.dll"):
+        return False, "未找到必要的文件:wxhelper.dll"
+    pm = pymem.Pymem()
+    try:
+        pm.open_process_from_id(pid)
+        pymem.pymem.process.inject_dll(pm.process_handle, bytes(os.path.abspath("wxhelper.dll"), encoding="ascii"))
+        is_inject = is_dll_already_inject(pid)
+        if not is_inject:
+            return False, "注入失败,可能权限不足或其他未知错误"
+        return True, "注入成功"
+    except Exception as e:
+        return False, "注入失败.{}".format(e)
 
 
 def write_config_file(port: int, wx_path) -> bool:

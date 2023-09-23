@@ -117,6 +117,7 @@ class MainWindow(QObject):
         final_proc.extend(new_processes)
         new_model = ProcModel(final_proc, self.proc_dic)
         self.ui.list_view.setModel(new_model)
+        logging.info("刷新进程列表完成")
 
     def set_wx_path_signal(self):
         file_dialog = QFileDialog()
@@ -126,6 +127,7 @@ class MainWindow(QObject):
         self.wx_dir = os.path.dirname(file_path)
         self.ui.wx_path_label.setText(file_path)
         self.is_wx_path_set = True
+        logging.info("微信路径已设置:{}".format(file_path))
 
     def inject_dll_signal(self):
         """DLL注入 注入前先检测微信路径是否设置,然后写入端口号到config.ini,并同步到界面元素"""
@@ -154,7 +156,7 @@ class MainWindow(QObject):
         proc.inject_dll_bind_port = self.auto_increase_port
         self.auto_increase_port += 1
         self.ui.inject_dll_bt.setEnabled(False)
-        logging.info("DLL注入成功,进程ID:{}".format(proc.pid))
+        logging.info("进程[{}]DLL注入成功,远程端口为{}".format(proc.pid, proc.inject_dll_bind_port))
         self.ui.list_view.clicked.emit(c_item)
         utils.save_proc_infos(c_item.model().procs)
 
@@ -168,7 +170,7 @@ class MainWindow(QObject):
             self.toast("消息回调失败,请稍后重试")
         proc.is_enable_msg_callback = b
         self.ui.list_view.clicked.emit(c_item)
-        logging.info("启用消息回调成功,进程ID{}".format(proc.pid))
+        logging.info("进程[{}]启用消息回调成功".format(proc.pid))
         utils.save_proc_infos(c_item.model().procs)
 
     def sync_login_status_signal(self):
@@ -190,7 +192,7 @@ class MainWindow(QObject):
         self.ui.login_user_name_label.setText(data["data"]["name"])
         c_item.user_info = data["data"]
         self.ui.list_view.clicked.emit(c_item)
-        logging.info("同步用户信息成功")
+        logging.info("同步用户信息成功,登陆用户为{}".format(data["data"]["name"]))
         utils.save_proc_infos(c_item.model().procs)
 
     def get_item_proc(self) -> tuple[QModelIndex, ProcessInfo | None]:
