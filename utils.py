@@ -1,4 +1,5 @@
 import json
+import logging
 import os.path
 from subprocess import check_output
 from typing import Tuple
@@ -22,6 +23,8 @@ def get_process_id_by_name(process_name):
 
 
 def inject_dll_by_pid(pid: int) -> Tuple[bool, str]:
+    if is_dll_already_inject(pid):
+        return True, "该进程已经注入过了"
     if not os.path.exists("wxhelper.dll"):
         return False, "未找到必要的文件:wxhelper.dll"
     pm = pymem.Pymem()
@@ -44,7 +47,7 @@ def write_config_file(port: int, wx_path) -> bool:
             f.write("port={}\n".format(port))
             return True
     except Exception as e:
-        print(e)
+        logging.error("写入config.ini失败:{}".format(e))
         return False
 
 
@@ -54,15 +57,19 @@ def is_dll_already_inject(pid: int, dll_name=DLL_NAME) -> bool:
     proc = psutil.Process(pid)
     for dll in proc.memory_maps():
         if dll.path.lower().find(dll_name) != -1:
-            print(dll.path)
             return True
     return False
 
 
-def save_proc_infos(procs: list[ProcessInfo], path: str = PROC_INFOS_FILE_NAME):
+def save_proc_infos(procs: list[ProcessInfo], path: str = PROC_INFOS_FILE_NAME) -> bool:
     # save procs as json file
-    with open(path, "w") as f:
-        f.write(json.dumps(procs, default=lambda o: o.__dict__, sort_keys=True, indent=4))
+    try:
+        with open(path, "w") as f:
+            f.write(json.dumps(procs, default=lambda o: o.__dict__, sort_keys=True, indent=4))
+        return True
+    except Exception as e:
+        logging.error("保存进程信息失败:{}".format(e))
+        return False
 
 
 def load_proc_infos(path: str = PROC_INFOS_FILE_NAME) -> list[ProcessInfo]:
@@ -74,6 +81,4 @@ def load_proc_infos(path: str = PROC_INFOS_FILE_NAME) -> list[ProcessInfo]:
         res = []
         for item in dict_list:
             res.append(ProcessInfo(**item))
-        print(res)
-        print(dict_list)
         return res

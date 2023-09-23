@@ -1,4 +1,5 @@
 import asyncio
+from functools import partial
 import logging
 import os.path
 
@@ -54,10 +55,10 @@ class MainWindow(QObject):
         ui.window.closeEvent = self.close_windows
         ui.refresh_procs_bt.clicked.connect(self.refresh_proc_list_signal)
         ui.list_view.clicked.connect(self.list_item_click_signal)
-        ui.inject_dll_bt.clicked.connect(self.inject_dll_signal)
+        ui.inject_dll_bt.clicked.connect(partial(self.inject_dll_signal, ui.inject_dll_bt))
         ui.select_wx_path_bt.clicked.connect(self.set_wx_path_signal)
-        ui.sync_login_status_bt.clicked.connect(self.sync_login_status_signal)
-        ui.enable_msg_callback.clicked.connect(self.enable_msg_callback_signal)
+        ui.sync_login_status_bt.clicked.connect(partial(self.sync_login_status_signal, ui.sync_login_status_bt))
+        ui.enable_msg_callback.clicked.connect(partial(self.enable_msg_callback_signal, ui.enable_msg_callback))
 
         ui.log_area.setReadOnly(True)
         ui.clean_log_bt.clicked.connect(self.clean_log_signal)
@@ -129,28 +130,32 @@ class MainWindow(QObject):
         self.is_wx_path_set = True
         logging.info("微信路径已设置:{}".format(file_path))
 
-    def inject_dll_signal(self):
+    def inject_dll_signal(self, bt):
         """DLL注入 注入前先检测微信路径是否设置,然后写入端口号到config.ini,并同步到界面元素"""
-        prefix = "[{}]失败\n".format(self.ui.inject_dll_bt.text())
+        bt.setEnabled(False)
         if self.ui.proc_id_label.text() == "0":
-            self.toast("{}请先选择一个进程".format(prefix))
+            self.toast("请先选择一个进程")
+            bt.setEnabled(True)
             return
         if not self.is_wx_path_set:
-            self.toast("{}请先设置微信路径".format(prefix))
+            self.toast("请先设置微信路径")
+            bt.setEnabled(True)
             return
         c_item, proc = self.get_item_proc()
         if not c_item.model():
-            self.toast("{}请先选择一个进程".format(prefix))
+            self.toast("请先选择一个进程")
+            bt.setEnabled(True)
             return
-        print(proc)
         is_success = utils.write_config_file(self.auto_increase_port, self.wx_dir)
         if not is_success:
-            self.toast("{}config.ini写入失败".format(prefix))
+            self.toast("config.ini写入失败")
+            bt.setEnabled(True)
             return
         # 注入DL
         is_success, res_str = utils.inject_dll_by_pid(proc.pid)
         if not is_success:
-            self.toast("{}{}".format(prefix, res_str))
+            self.toast("{}".format(res_str))
+            bt.setEnabled(True)
             return
         proc.is_inject = True
         proc.inject_dll_bind_port = self.auto_increase_port
@@ -159,33 +164,41 @@ class MainWindow(QObject):
         logging.info("进程[{}]DLL注入成功,远程端口为{}".format(proc.pid, proc.inject_dll_bind_port))
         self.ui.list_view.clicked.emit(c_item)
         utils.save_proc_infos(c_item.model().procs)
+        bt.setEnabled(False)
 
-    def enable_msg_callback_signal(self):
-        asyncio.gather(self.enable_msg_callback())
+    def enable_msg_callback_signal(self, bt):
+        asyncio.gather(self.enable_msg_callback(bt))
 
-    async def enable_msg_callback(self):
+    async def enable_msg_callback(self, bt):
+        bt.setEnabled(False)
         c_item, proc = self.get_item_proc()
         b = await Client.hook_msg(self.bot_config["port"], proc.inject_dll_bind_port)
         if not b:
             self.toast("消息回调失败,请稍后重试")
+            bt.setEnabled(True)
+            return
         proc.is_enable_msg_callback = b
         self.ui.list_view.clicked.emit(c_item)
         logging.info("进程[{}]启用消息回调成功".format(proc.pid))
         utils.save_proc_infos(c_item.model().procs)
+        bt.setEnabled(False)
 
-    def sync_login_status_signal(self):
-        asyncio.gather(self.sync_login_status())
+    def sync_login_status_signal(self, bt):
+        asyncio.gather(self.sync_login_status(bt))
 
-    async def sync_login_status(self):
+    async def sync_login_status(self, bt):
+        bt.setEnabled(False)
         c_item, proc = self.get_item_proc()
         port = self.ui.bind_prot_label.text()
         is_login = await Client.is_login(int(port))
         if not is_login:
             self.toast("该微信进程没有登陆,请先登陆再操作")
+            bt.setEnabled(True)
             return
         data = await Client.get_login_user_info(int(port))
         if data["code"] != 1:
             self.toast("同步用户信息失败,请稍后重试")
+            bt.setEnabled(True)
             return
         proc.login_user_name = data["data"]["name"]
         proc.is_login = True
@@ -194,6 +207,7 @@ class MainWindow(QObject):
         self.ui.list_view.clicked.emit(c_item)
         logging.info("同步用户信息成功,登陆用户为{}".format(data["data"]["name"]))
         utils.save_proc_infos(c_item.model().procs)
+        bt.setEnabled(False)
 
     def get_item_proc(self) -> tuple[QModelIndex, ProcessInfo | None]:
         c_item = self.ui.list_view.currentIndex()

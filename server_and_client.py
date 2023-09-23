@@ -32,7 +32,6 @@ class Client:
         async with aiohttp.ClientSession(base_url="{}:{}".format(BASE_URL, wxhelper_port)) as session:
             async with session.post(API_HOOK_MSG, json=body, headers=headers) as resp:
                 date = await resp.json()
-                print(date)
                 return date["code"] == 0
 
 
