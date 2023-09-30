@@ -4,7 +4,7 @@ import logging
 import os.path
 
 from PySide6.QtCore import QAbstractListModel, Qt, QModelIndex, Signal, QObject
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QMainWindow
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 
 import ui_main
 import utils
@@ -49,10 +49,10 @@ class MainWindow(QObject):
         super().__init__()
 
         ui_main_windows = ui_main.Ui_main_window()
-        ui_main_windows.setupUi(QMainWindow())
+        ui_main_windows.setupUi(QWidget())
         ui = ui_main_windows
-        ui.window.setWindowFlags(Qt.WindowType.MSWindowsFixedSizeDialogHint)
-        ui.window.closeEvent = self.close_windows
+        ui.main_widget.setWindowFlags(Qt.WindowType.MSWindowsFixedSizeDialogHint)
+        ui.main_widget.closeEvent = self.close_windows
         ui.refresh_procs_bt.clicked.connect(self.refresh_proc_list_signal)
         ui.list_view.clicked.connect(self.list_item_click_signal)
         ui.inject_dll_bt.clicked.connect(partial(self.inject_dll_signal, ui.inject_dll_bt))
@@ -103,7 +103,7 @@ class MainWindow(QObject):
         self.ui.enable_msg_callback.setEnabled(proc.is_inject and not proc.is_enable_msg_callback)
 
     def close_windows(self, e):
-        self.ui.window.close()
+        self.ui.main_widget.close()
         asyncio.get_event_loop().stop()
         asyncio.get_event_loop().close()
 
@@ -122,7 +122,7 @@ class MainWindow(QObject):
 
     def set_wx_path_signal(self):
         file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self.ui.window, "选择微信路径", "", "微信文件(wechat.exe)")
+        file_path, _ = file_dialog.getOpenFileName(self.ui.main_widget, "选择微信路径", "", "微信文件(wechat.exe)")
         if not file_path:
             return
         self.wx_dir = os.path.dirname(file_path)
@@ -215,4 +215,4 @@ class MainWindow(QObject):
         return c_item, proc
 
     def toast(self, msg):
-        QMessageBox.information(self.ui.window, "提示", msg)
+        QMessageBox.information(self.ui.main_widget, "提示", msg)

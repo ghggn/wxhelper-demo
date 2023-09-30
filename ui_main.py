@@ -31,23 +31,20 @@ from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QListView, QMai
 
 
 class Ui_main_window(object):
-    def setupUi(self, main_window: QMainWindow):
-        if not main_window.objectName():
-            main_window.setObjectName("main_window")
-        main_window.setWindowModality(Qt.NonModal)
-        main_window.setEnabled(True)
-        main_window.resize(800, 500)
+    def setupUi(self, main_widget: QWidget):
+        if not main_widget.objectName():
+            main_widget.setObjectName("main_window")
+        main_widget.setWindowModality(Qt.NonModal)
+        main_widget.setEnabled(True)
+        main_widget.resize(800, 500)
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(main_window.sizePolicy().hasHeightForWidth())
-        main_window.setSizePolicy(sizePolicy)
-        main_window.setMinimumSize(QSize(500, 500))
-        main_window.setMaximumSize(QSize(800, 800))
-        main_window.setAnimated(False)
-        self.window = main_window
-        self.main_widget = QWidget(main_window)
-        self.main_widget.setObjectName("main_widget")
+        sizePolicy.setHeightForWidth(main_widget.sizePolicy().hasHeightForWidth())
+        main_widget.setSizePolicy(sizePolicy)
+        main_widget.setMinimumSize(QSize(500, 500))
+        main_widget.setMaximumSize(QSize(800, 800))
+        self.main_widget = main_widget
         self.horizontalLayout = QHBoxLayout(self.main_widget)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout_3 = QVBoxLayout()
@@ -203,11 +200,11 @@ class Ui_main_window(object):
         self.horizontalLayout.setStretch(0, 1)
         self.horizontalLayout.setStretch(1, 1)
         self.horizontalLayout.setStretch(2, 2)
-        main_window.setCentralWidget(self.main_widget)
+        self.horizontalLayout.setContentsMargins(4, 4, 4, 4)
 
-        self.retranslateUi(main_window)
+        self.retranslateUi(main_widget)
 
-        QMetaObject.connectSlotsByName(main_window)
+        QMetaObject.connectSlotsByName(main_widget)
 
     # setupUi
 

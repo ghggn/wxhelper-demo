@@ -7,19 +7,11 @@ from PySide6 import QtWidgets
 import server_and_client
 from ui import MainWindow, UILogging
 
-TEXT_PROC = {
-    "name": "python.exe",
-    "prefix": "Python"
-}
+TEXT_PROC = {"name": "python.exe", "prefix": "Python"}
 
-DEFAULT_PROC = {
-    "name": "wechat.exe",
-    "prefix": "微信"
-}
+DEFAULT_PROC = {"name": "wechat.exe", "prefix": "微信"}
 
-BOT_CONFIG = {
-    "port": 11000
-}
+BOT_CONFIG = {"port": 11000}
 
 
 def main():
@@ -33,7 +25,7 @@ def main():
     loop = qasync.QEventLoop(app)
     asyncio.set_event_loop(loop)
     asyncio.gather(server_and_client.main(BOT_CONFIG))
-    main_window.ui.window.show()
+    main_window.ui.main_widget.show()
     logging.info("Starting")
 
     loop.run_forever()
