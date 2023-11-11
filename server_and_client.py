@@ -51,6 +51,7 @@ class Server:
         date = await reader.read()
         try:
             data_json_dict = json.loads(date.decode("utf-8"))
+            # todo 在这里实现你的逻辑
             if "type" in data_json_dict and data_json_dict["type"] == 1:
                 logging.info("{} - {}".format(data_json_dict["fromUser"], data_json_dict["content"]))
                 pass

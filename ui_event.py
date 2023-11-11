@@ -1,12 +1,12 @@
 import asyncio
-from functools import partial
 import logging
 import os.path
+from functools import partial
 
 from PySide6.QtCore import QAbstractListModel, Qt, QModelIndex, Signal, QObject
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 
-import ui_main
+import ui_layout
 import utils
 from models import ProcessInfo
 from server_and_client import Client
@@ -48,7 +48,7 @@ class MainWindow(QObject):
     def __init__(self, proc_dic: dict, bot_config: dict):
         super().__init__()
 
-        ui_main_windows = ui_main.Ui_main_window()
+        ui_main_windows = ui_layout.Ui_main_window()
         ui_main_windows.setupUi(QWidget())
         ui = ui_main_windows
         ui.main_widget.setWindowFlags(Qt.WindowType.MSWindowsFixedSizeDialogHint)

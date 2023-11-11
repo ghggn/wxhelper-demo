@@ -5,7 +5,7 @@ import qasync
 from PySide6 import QtWidgets
 
 import server_and_client
-from ui import MainWindow, UILogging
+from ui_event import MainWindow, UILogging
 
 TEXT_PROC = {"name": "python.exe", "prefix": "Python"}
 
